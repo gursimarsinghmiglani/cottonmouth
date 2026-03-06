@@ -1,0 +1,46 @@
+project/
+│
+├── CMakeLists.txt
+├── README.md
+│
+├── include/
+│   ├── lexer/
+│   │   └── token.hpp
+│   ├── parser/
+│   │   └── ast.hpp
+│   ├── sema/
+│   │   └── types.hpp
+│   ├── ir/
+│   │   └── ir.hpp
+│   └── common/
+│       └── error.hpp
+│
+├── src/
+│   ├── main.cpp
+│   │
+│   ├── lexer/
+│   │   ├── lexer.cpp
+│   │   └── dfa.cpp        # if building your own scanner engine
+│   │
+│   ├── parser/
+│   │   ├── parser.cpp
+│   │   └── grammar.cpp
+│   │
+│   ├── sema/
+│   │   └── typecheck.cpp
+│   │
+│   ├── ir/
+│   │   ├── ir_builder.cpp
+│   │   └── passes/
+│   │       └── constant_fold.cpp
+│   │
+│   └── backend/
+│       └── codegen.cpp
+│
+├── tests/
+│   ├── lexer/
+│   ├── parser/
+│   └── integration/
+│
+└── tools/
+    └── yourdsl-driver
