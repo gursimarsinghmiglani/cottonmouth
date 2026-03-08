@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 #include "lexeme.hpp"
 #include "regex_to_nfa.hpp"
@@ -54,14 +55,18 @@ inline const std::string int_lit_regex() {
 }
 inline const std::string float_lit_regex() {
     std::string ret;
-    ret.append("((\\e+");
     std::string int_lit = int_lit_regex();
+    ret.append("((");
+    ret.append(int_lit);
+    ret.append("+(\\e+");
     ret.append(int_lit);
     ret.append(")\\.");
     ret.append(int_lit);
     ret.append("+");
     ret.append(int_lit);
     ret.append("\\.(\\e+");
+    ret.append(int_lit);
+    ret.append("))(\\e+(e+E)");
     ret.append(int_lit);
     ret.append("))");
     return ret;
@@ -149,34 +154,45 @@ inline const std::vector<Token> tokens_truncated() {
 const DFA dfa = regex_to_dfa(regexes, tokens_truncated());
 inline std::vector<Lexeme> maximal_munch(std::string& source) {
     std::vector<Lexeme> lexemes;
+    std::vector<std::vector<bool>> failed(source.size(), std::vector<bool>(dfa.num_states));
+    std::stack<std::pair<int, int>> s;
     int pos = 0;
     int line_number = 1;
     int pos_within_line = 1;
+    int last_accepting_pos_within_line = 0;
     while (pos < source.size()) {
         int last_accepting_state = -1;
         int last_accepting_pos = -1;
-        int last_accepting_pos_within_line = -1;
         int state = dfa.start_state;
         int start = pos;
-        while (pos < source.size() && !std::isspace(source[pos])) {
-            state = dfa.delta[state][source[pos]];
+        while (pos < source.size() && !std::isspace(static_cast<unsigned char>(source[pos]))) {
+            if (failed[pos][state]) {
+                break;
+            }
+            state = dfa.delta[state][static_cast<unsigned char>(source[pos])];
             if (dfa.token_types[state] != Token::TOK_ERROR) {
+                s = std::stack<std::pair<int, int>>();
                 last_accepting_state = state;
                 last_accepting_pos = pos;
                 last_accepting_pos_within_line = pos_within_line;
             }
+            s.push(std::make_pair(pos, state));
             pos++;
             pos_within_line++;
         }
+        while (!s.empty() && dfa.token_types[s.top().second] == Token::TOK_ERROR) {
+            failed[s.top().first][s.top().second] = true;
+            s.pop();
+        }
         if (last_accepting_state == -1) {
-            std::cerr << "Lexical error in line " << line_number << " at position " << pos_within_line << "\n";
+            std::cerr << "Lexical error in line " << line_number << " at position " << last_accepting_pos_within_line + 1 << "\n";
             std::exit(1);
         }
         Lexeme lexeme(start, last_accepting_pos - start + 1, dfa.token_types[last_accepting_state]);
         lexemes.push_back(lexeme);
         pos = last_accepting_pos + 1;
         pos_within_line = last_accepting_pos_within_line + 1;
-        while (pos < source.size() && std::isspace(source[pos])) {
+        while (pos < source.size() && std::isspace(static_cast<unsigned char>(source[pos]))) {
             if (source[pos] == '\n') {
                 line_number++;
                 pos_within_line = 1;
