@@ -14,6 +14,7 @@
     X(TOK_BOOL) \
     X(TOK_IF) \
     X(TOK_ELSE) \
+    X(TOK_RANGE) \
     X(TOK_FOR) \
     X(TOK_WHILE) \
     X(TOK_IN) \
