@@ -211,5 +211,6 @@ inline std::vector<Lexeme> maximal_munch(std::string& source) {
             pos++;
         }
     }
+    lexemes.push_back(Lexeme(-1, -1, -1, "", Token::TOK_EOF));
     return lexemes;
 }
